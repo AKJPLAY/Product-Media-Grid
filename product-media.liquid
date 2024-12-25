@@ -1,0 +1,93 @@
+{% style %}
+.main-media-container {
+    overflow: hidden;
+    width: 500px;
+    margin: 0 auto;
+  }
+  .main-media-container .thumb-slider {
+    display: block;
+  }
+  .main-media-container .thumb-slider .swiper-slide img {
+    border: 1px solid transparent;
+  }
+  .main-media-container .thumb-slider .active img {
+    border: 1px solid red;
+  }
+  .main-media-container .thumb-slider img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    -o-object-fit: cover;
+       object-fit: cover;
+    border-radius: 5px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .main-media-container .main-slider {
+    display: block;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .main-media-container .main-slider img {
+    border-radius: 20px;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 1/1;
+    -o-object-fit: cover;
+       object-fit: cover;
+  }
+{% endstyle %}
+
+<div class="main-media-container">
+    <smart-slider-product class="main-slider" data-slide-change data-target="thumb-slider">
+        <div class="swiper-wrapper">
+            {% for image in product.images %}
+                <div class="swiper-slide" data-id="{{image.id}}">
+                    <img src="{{ image | img_url: 'master' }}" alt="{{ image.alt }}">
+                </div>
+            {% endfor %}
+        </div>
+        <script type="application/json" class="swiper-config">
+            {
+                "loop": true,
+                "slidesPerView": 1
+            }
+        </script>
+    </smart-slider-product>
+    <smart-slider-product class="thumb-slider" id="thumb-slider">
+        <div class="swiper-wrapper">
+            {% for image in product.images %}
+                <div class="swiper-slide {% if forloop.first %}active{% endif %}" onclick="this.parentElement.querySelectorAll('.swiper-slide').forEach( slide => { slide == this ? slide.classList.add('active') : slide.classList.remove('active') } );  document.querySelector('.main-slider').swiper.slideTo((this.dataset.swiperSlideIndex * 1))" data-id="{{image.id}}">
+                    <img src="{{ image | img_url: 'master' }}" alt="{{ image.alt }}">
+                </div>
+            {% endfor %}
+        </div>
+        <script type="application/json" class="swiper-config">
+            {
+                "loop": true,
+                "slidesPerView": 6,
+                "spaceBetween": 5
+            }
+        </script>
+    </smart-slider-product>
+</div>
+
+<script>
+    if(!customElements.get('smart-slider-product')){
+        class SmartSliderProduct extends HTMLElement {
+            constructor() {
+                super();
+                this.config = JSON.parse(this.querySelector('.swiper-config').textContent);
+                'slideChange' in this.dataset ? 
+                this.config.on = { 
+                                    slideChange : function(event) { 
+                                        document.getElementById(event.passedParams.el.dataset.target).querySelectorAll('.swiper-slide').forEach(slide => {
+                                            slide.dataset.id == event.slides[event.activeIndex].dataset.id ? slide.classList.add('active') : slide.classList.remove('active');
+                                        });
+                                    } 
+                                } : '';
+                this.swiper = new Swiper(this, this.config);
+            }
+        }
+        customElements.define('smart-slider-product', SmartSliderProduct);
+    }
+</script>
